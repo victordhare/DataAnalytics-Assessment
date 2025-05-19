@@ -1,136 +1,138 @@
 # DataAnalytics-Assessment
-My approach to each question
 
+**My approach to each question**
 
- for Assessment_Q1:
- 
- Query Breakdown
- 
-CONCAT(...) AS name: Combines first and last names into a full name for readability.
 
-COUNT(DISTINCT ...): Counts how many unique savings accounts and plans the user has.
+## For Assessment\_Q1:
 
-SUM(...): Adds up all savings and plan contributions to compute total deposits.
+**Query Breakdown**
 
-Filters out any users who do not have both savings and plan contributions greater than zero.
+* **CONCAT(...) AS name**: I use this to combine the first and last names into a full name. It makes the output easier to read and understand.
 
-Groups the results by user so that aggregates (like SUM and COUNT) apply per user.
+* **COUNT(DISTINCT ...)**: This helps me count how many unique savings accounts and plans each user has, ensuring I get distinct values rather than duplicates.
 
-Orders the results to show the users with the highest total deposits first.
+* **SUM(...)**: I use this to add up all savings and plan contributions to compute the total deposits for each user.
 
-  for assessment_Q2:
-  
- Step 1: Monthly transaction count per user
+* **Filters**: I make sure to filter out users who don’t have both savings and plan contributions greater than zero. This helps in focusing on active users with meaningful data.
 
-Purpose: For each user (owner_id) and each month (txn_month), count how many transactions they made.
+* **GROUP BY**: I group the results by user so that the aggregate functions (like `SUM` and `COUNT`) are applied per user, ensuring accurate totals.
 
-DATE_FORMAT(transaction_date, '%Y-%m'): Extracts the year and month part of the transaction date.
+* **ORDER BY**: To get the most valuable users at the top, I order the results by total deposits in descending order.
 
-COUNT(*): Counts how many transactions the user made in that month.
+---
 
-Result: A table showing the number of transactions per user per month.
+## For Assessment\_Q2:
 
- Step 2: Average transactions per user across months
+**Step 1: Monthly transaction count per user**
 
-Purpose: For each user, calculate the average number of transactions per month over the time period covered.
+* **Purpose**: For each user (identified by `owner_id`) and each month (identified by `txn_month`), I count how many transactions they made.
 
-AVG(txns_in_month): Takes the average of their monthly transaction counts.
+* **DATE\_FORMAT(transaction\_date, '%Y-%m')**: This extracts the year and month from the transaction date. I use this to group transactions by month.
 
- Step 3: Categorize users by frequency
+* **COUNT(\*)**: I use this to count how many transactions each user made during that month.
 
-Purpose: Assign each user a frequency category based on their average monthly transactions.
+* **Result**: I get a table that shows the number of transactions each user made per month.
 
-Categories:
+**Step 2: Average transactions per user across months**
 
-High Frequency: 10 or more transactions per month
+* **Purpose**: For each user, I calculate the average number of transactions they made per month across all months.
 
-Medium Frequency: 3 to 9 transactions per month
+* **AVG(txns\_in\_month)**: This function gives me the average of the monthly transaction counts, helping me understand user behavior over time.
 
-Low Frequency: Less than 3 transactions per month
+**Step 3: Categorize users by frequency**
 
- Step 4: Final aggregation
+* **Purpose**: I categorize users based on their average monthly transactions, giving me insight into how often users engage.
 
+* **Categories**:
 
-COUNT(*): Number of users in each frequency category.
+  * **High Frequency**: 10 or more transactions per month
+  * **Medium Frequency**: 3 to 9 transactions per month
+  * **Low Frequency**: Less than 3 transactions per month
 
-AVG(avg_txns_per_month): The average number of transactions (again) within that category.
+**Step 4: Final aggregation**
 
-ROUND(..., 1): Round to one decimal place.
+* **COUNT(\*)**: This counts how many users fall into each frequency category.
 
-ORDER BY FIELD(...): Ensures the categories are listed in logical order (High → Medium → Low), not alphabetically.
+* **AVG(avg\_txns\_per\_month)**: I calculate the average number of transactions within each category.
 
-for Assessment_Q3
+* **ROUND(..., 1)**: To make the result cleaner, I round the average transactions to one decimal place.
 
-This SQL query identifies inactive accounts from two different sources — Savings accounts and Investment plans — where the last transaction or charge happened over a year ago (i.e. more than 365 days).
+* **ORDER BY FIELD(...)**: I order the categories logically (High → Medium → Low) instead of alphabetically, ensuring that the more engaged users are at the top.
 
-It combines both sources into one unified result set using UNION ALL and sorts by how long each account has been inactive.
+---
 
-🔍 Query Breakdown
+## For Assessment\_Q3:
 
-Only include records where there was a transaction (transaction_date IS NOT NULL).
+This query helps me identify inactive accounts from two different sources—Savings accounts and Investment plans—where the last transaction or charge occurred over a year ago (i.e., more than 365 days).
 
-The transaction happened over 365 days ago.
+I combine both sources into one unified result using `UNION ALL`, and I sort the result by the length of time since each account became inactive.
 
-savings_id: Unique ID of the savings plan.
+ **Query Breakdown**:
 
-owner_id: User who owns the account.
+* **Filters**: I only include records where a transaction has occurred (`transaction_date IS NOT NULL`) and where the transaction happened over 365 days ago.
 
-'Savings': A literal label to identify this row as a "Savings" type.
+* **Savings Accounts**:
 
-transaction_date: Last transaction date.
+  * I select the `savings_id`, `owner_id`, and `transaction_date`.
+  * I calculate the inactivity days using `DATEDIFF(CURDATE(), transaction_date)`.
 
-inactivity_days: Number of days since the last transaction, calculated using DATEDIFF(CURDATE(), transaction_date).
+* **Investment Plans**:
 
- Second SELECT block (Investment plans)
+  * I apply similar logic as in the savings query.
+  * The only difference is that the field names change slightly (e.g., `id` becomes `plan_id`).
 
-Only include plans with a valid last_charge_date.
+* **`UNION ALL`**: I use `UNION ALL` to combine both result sets without eliminating duplicates. This is important because I’m working with data from two different sources (savings vs. investments).
 
-Must be inactive for more than 365 days.
+* **Sorting**: Finally, I sort the result so the most inactive accounts (those with the longest inactivity period) come first.
 
-Returns similar columns to the first block for consistency:
+---
 
-id becomes plan_id
+## For Assessment\_Q4:
 
-Other fields map the same way as in the savings query.
+**Step 1**
 
-Combines the two result sets without eliminating duplicates (useful when working across different domains like savings vs. investments).
+* **`TIMESTAMPDIFF(MONTH, u.date_joined, CURDATE()) AS tenure_months`**: I calculate how long the user has been on the platform by finding the difference between their join date and the current date. The result is in months, which helps me understand the user’s tenure.
 
-Sorts the final list so that the most inactive accounts (i.e. those with the longest inactivity period) come first.
+* **`COUNT(s.confirmed_amount) AS total_transactions`**: I count how many transactions the user has made, using the `confirmed_amount` in the `savings_savingsaccount` table. This gives me the total number of non-null transactions for each user.
 
-For Assessment_Q4
-Step One
+* **`(COUNT(s.confirmed_amount) / TIMESTAMPDIFF(MONTH, u.date_joined, CURDATE())) * 12 * (0.001 * AVG(s.confirmed_amount)) AS estimated_clv`**: To estimate the customer lifetime value (CLV), I:
 
-TIMESTAMPDIFF(MONTH, u.date_joined, CURDATE()) AS tenure_months: Calculate how long the user has been on the platform by finding the difference between their join date (u.date_joined) and the current date (CURDATE()). The result is in months.
+  * Calculate the average number of transactions per month.
+  * Scale this to transactions per year.
+  * Multiply by the average value of transactions (scaled by 0.001, which might represent the dollar value of a transaction).
 
-COUNT(s.confirmed_amount) AS total_transactions: Count the total number of transactions the user has made. This is done by counting the number of non-null confirmed_amount entries in the savings_savingsaccount table (s.confirmed_amount).
+  This formula gives me an estimated annual value for each user, adjusting for both transaction volume and value.
 
-(COUNT(s.confirmed_amount) / TIMESTAMPDIFF(MONTH, u.date_joined, CURDATE())) * 12 * (0.001 * AVG(s.confirmed_amount)) AS estimated_clv: This calculates the estimated customer lifetime value (CLV):
+**Step 2: Join Tables**
 
-COUNT(s.confirmed_amount) / TIMESTAMPDIFF(MONTH, u.date_joined, CURDATE()) gives the average number of transactions per month.
+* **`FROM users_customuser u`**: I pull data from the `users_customuser` table, which contains user information like join date and ID.
 
-Multiplying by 12 scales this number to transactions per year.
+* **`JOIN savings_savingsaccount s ON u.id = s.owner_id`**: I join the `users_customuser` table with the `savings_savingsaccount` table, which contains the savings account transaction data. This join brings all transactions tied to each user.
 
-AVG(s.confirmed_amount) calculates the average value of transactions.
+**Step 3: Grouping Data by User**
 
-0.001 * AVG(s.confirmed_amount) seems to be a scaling factor to adjust the impact of transaction values on the CLV calculation. It likely represents the dollar value (or another currency unit) per transaction.
+* **`GROUP BY`**: I group the data by user (`u.id`) so that calculations like transaction count and average transaction value are done for each user individually.
 
-The final formula estimates how much each user is worth per year, adjusting for both the number of transactions and their average value.
+**Step 4: Ordering Results by Estimated CLV**
 
-Step 2: Join Tables
+* **`ORDER BY estimated_clv DESC`**: After calculating the estimated CLV for each user, I order the results in descending order. This way, users with the highest lifetime value appear at the top of the list.
 
-FROM users_customuser u: The data is pulled from the users_customuser table, which presumably holds user information like name, join date, etc.
 
-JOIN savings_savingsaccount s ON u.id = s.owner_id: The query joins the users_customuser table with the savings_savingsaccount table. The savings_savingsaccount table holds data about the user's savings accounts, such as the amount and transaction details.
+## The Challenges and Resolutions for SQL Queries
 
-The join is done by matching u.id (user ID) with s.owner_id (the owner of the savings account).
+1. **Date Handling**: For me, one of the most common issues I’ve faced is making sure date columns are formatted properly. I make sure to use `DATEDIFF()` and `DATE_FORMAT()` correctly, and if dates are stored as text, I always convert them with `STR_TO_DATE()` to avoid future headaches.
 
-This means that for every user, all their transactions in the savings account will be brought together.
+2. **Performance**: When I’m working with large datasets, especially with `UNION ALL`, I’ve noticed that performance can slow down. To fix this, I typically create indexes on columns like `transaction_date` and `owner_id` to speed things up. If needed, I break the query into smaller pieces or use temporary tables to improve performance.
 
-Step 3: Grouping Data by User
+3. **NULL Handling**: I always pay extra attention to NULL values in date columns, as they can cause issues with inactivity days calculations. I use `COALESCE()` or similar functions to handle NULLs and ensure that my calculations are accurate and error-free.
 
-GROUP BY: The query groups the data by the user (identified by u.id), so that calculations like transaction count and average transaction value are done for each individual user.
+4. **Frequency Categorization**: I’ve found that frequency categorization sometimes needs adjustments to handle edge cases correctly. I make sure to double-check the logic to ensure users are categorized as "High," "Medium," or "Low" in the most accurate way.
 
-This is important because we need the total transactions and average transaction value for each user, not globally across all users.
+5. **Query Optimization**: Whenever I’m facing performance issues, I rely on `EXPLAIN` to analyze how the query is being executed. It helps me pinpoint areas that need optimization. I also try to simplify the query, removing unnecessary `UNION` operations that might be slowing things down.
 
-Step 4: Ordering Results by Estimated CLV
-ORDER BY estimated_clv DESC: After calculating the estimated customer lifetime value (CLV) for each user, the results are sorted in descending order. This means users with the highest CLV will be listed at the top of the result set.
+6. **Readability**: I always prioritize making my queries easy to read and maintain. Breaking up complex queries into smaller, manageable parts and adding comments makes a huge difference for both myself and anyone else who might need to work with the code later.
+
+By following these strategies, I’ve been able to improve both the accuracy and performance of my queries, making my work smoother and more efficient.
+
+
+
